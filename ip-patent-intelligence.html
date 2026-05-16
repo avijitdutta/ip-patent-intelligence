@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IP & Patent Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1510;
+    --parchment: #f5f0e8;
+    --amber: #c8860a;
+    --rust: #8b3a1c;
+    --sage: #4a6741;
+    --steel: #3d5a6e;
+    --cream: #faf7f2;
+    --border: rgba(26,21,16,0.15);
+    --shadow: rgba(26,21,16,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+    font-weight: 300;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  header {
+    background: var(--ink);
+    color: var(--parchment);
+    padding: 3rem 4rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 40px,
+      rgba(200,134,10,0.04) 40px,
+      rgba(200,134,10,0.04) 41px
+    );
+  }
+
+  .header-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 1rem;
+    position: relative;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--parchment);
+    position: relative;
+    max-width: 700px;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--amber);
+  }
+
+  .header-meta {
+    margin-top: 1.5rem;
+    font-size: 0.72rem;
+    color: rgba(245,240,232,0.5);
+    letter-spacing: 0.1em;
+    position: relative;
+  }
+
+  /* Nav tabs */
+  .tab-bar {
+    background: var(--ink);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    padding: 0 4rem;
+    gap: 0;
+    overflow-x: auto;
+  }
+
+  .tab {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.4);
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+  }
+
+  .tab:hover { color: rgba(245,240,232,0.7); }
+  .tab.active {
+    color: var(--amber);
+    border-bottom-color: var(--amber);
+  }
+
+  /* Sections */
+  .section {
+    display: none;
+    padding: 3rem 4rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .section.active { display: block; }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 400;
+    margin-bottom: 0.4rem;
+    color: var(--ink);
+  }
+
+  .section-subtitle {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 2.5rem;
+  }
+
+  /* Value chain */
+  .chain {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 3rem;
+  }
+
+  .chain-stage {
+    display: grid;
+    grid-template-columns: 180px 1fr 200px;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    background: white;
+    transition: background 0.2s;
+  }
+
+  .chain-stage:first-child { border-radius: 4px 4px 0 0; }
+  .chain-stage:last-child { border-bottom: 1px solid var(--border); border-radius: 0 0 4px 4px; }
+  .chain-stage:hover { background: #fdfaf5; }
+
+  .stage-num {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    border-right: 1px solid var(--border);
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: rgba(200,134,10,0.2);
+    font-style: italic;
+    line-height: 1;
+  }
+
+  .stage-body {
+    padding: 1.4rem 1.8rem;
+    border-right: 1px solid var(--border);
+  }
+
+  .stage-name {
+    font-family: 'Fraunces', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.3rem;
+  }
+
+  .stage-desc {
+    font-size: 0.75rem;
+    color: rgba(26,21,16,0.65);
+    line-height: 1.6;
+  }
+
+  .stage-value {
+    padding: 1.4rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .value-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 0.3rem;
+  }
+
+  .value-text {
+    font-size: 0.75rem;
+    color: var(--ink);
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+  }
+
+  /* Databases grid */
+  .db-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 3rem;
+  }
+
+  .db-card {
+    background: white;
+    padding: 1.4rem 1.5rem;
+    transition: background 0.2s;
+  }
+  .db-card:hover { background: #fdfaf5; }
+
+  .db-tag {
+    display: inline-block;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    margin-bottom: 0.6rem;
+    font-weight: 500;
+  }
+
+  .tag-free { background: rgba(74,103,65,0.12); color: var(--sage); }
+  .tag-paid { background: rgba(139,58,28,0.1); color: var(--rust); }
+  .tag-both { background: rgba(200,134,10,0.1); color: var(--amber); }
+
+  .db-name {
+    font-family: 'Fraunces', serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.25rem;
+  }
+
+  .db-owner {
+    font-size: 0.65rem;
+    color: rgba(26,21,16,0.45);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  .db-desc {
+    font-size: 0.72rem;
+    color: rgba(26,21,16,0.65);
+    line-height: 1.55;
+  }
+
+  /* Velocity table */
+  .velocity-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 3rem;
+  }
+
+  .velocity-table th {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    border-bottom: 2px solid var(--amber);
+    padding: 0.8rem 1rem;
+    text-align: left;
+    font-weight: 500;
+  }
+
+  .velocity-table td {
+    padding: 1rem 1rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.76rem;
+    vertical-align: top;
+  }
+
+  .velocity-table tr:hover td { background: rgba(200,134,10,0.04); }
+
+  .rank-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: rgba(200,134,10,0.3);
+    font-style: italic;
+  }
+
+  .org-name {
+    font-family: 'Fraunces', serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ink);
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+
+  .org-country {
+    font-size: 0.65rem;
+    color: rgba(26,21,16,0.45);
+    letter-spacing: 0.05em;
+  }
+
+  .country-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    font-weight: 500;
+  }
+
+  .badge-kr { background: rgba(61,90,110,0.1); color: var(--steel); }
+  .badge-us { background: rgba(200,134,10,0.1); color: var(--amber); }
+  .badge-cn { background: rgba(139,58,28,0.1); color: var(--rust); }
+  .badge-jp { background: rgba(74,103,65,0.12); color: var(--sage); }
+  .badge-de { background: rgba(61,90,110,0.08); color: var(--steel); }
+  .badge-nl { background: rgba(74,103,65,0.1); color: var(--sage); }
+  .badge-fi { background: rgba(61,90,110,0.12); color: var(--steel); }
+
+  .bar-wrap {
+    width: 100%;
+    height: 4px;
+    background: rgba(26,21,16,0.08);
+    border-radius: 2px;
+    margin-top: 0.5rem;
+  }
+
+  .bar-fill {
+    height: 100%;
+    background: var(--amber);
+    border-radius: 2px;
+    opacity: 0.7;
+  }
+
+  /* Country section */
+  .country-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .country-card {
+    background: white;
+    padding: 1.5rem;
+  }
+
+  .country-rank {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    font-weight: 700;
+    font-style: italic;
+    color: rgba(200,134,10,0.15);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .country-name {
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+
+  .country-apps {
+    font-size: 0.7rem;
+    color: var(--amber);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  .country-note {
+    font-size: 0.68rem;
+    color: rgba(26,21,16,0.55);
+    line-height: 1.5;
+  }
+
+  /* Callout box */
+  .callout {
+    border-left: 3px solid var(--amber);
+    background: rgba(200,134,10,0.05);
+    padding: 1.2rem 1.5rem;
+    border-radius: 0 4px 4px 0;
+    margin: 2rem 0;
+  }
+
+  .callout p {
+    font-size: 0.78rem;
+    color: rgba(26,21,16,0.75);
+    line-height: 1.7;
+  }
+
+  .callout strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* Trends */
+  .trend-list {
+    list-style: none;
+  }
+
+  .trend-item {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 1rem;
+    padding: 1.2rem 0;
+    border-bottom: 1px solid var(--border);
+    align-items: start;
+  }
+
+  .trend-arrow {
+    font-size: 1.2rem;
+    color: var(--amber);
+    margin-top: 0.1rem;
+  }
+
+  .trend-body strong {
+    font-family: 'Fraunces', serif;
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 0.2rem;
+    font-weight: 600;
+  }
+
+  .trend-body p {
+    font-size: 0.73rem;
+    color: rgba(26,21,16,0.65);
+    line-height: 1.6;
+  }
+
+  /* Mobile responsiveness */
+  @media (max-width: 768px) {
+    header { padding: 2rem 1.5rem; }
+    .tab-bar { padding: 0 1.5rem; }
+    .section { padding: 2rem 1.5rem; }
+    .chain-stage { grid-template-columns: 60px 1fr; }
+    .stage-value { display: none; }
+    h1 { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-label">Intelligence Brief · May 2026</div>
+  <h1>IP & Patent<br><em>Value Chain</em></h1>
+  <div class="header-meta">Databases · Filing Velocity · Global Rankings · Emerging Trends</div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="showSection('chain')">Value Chain</button>
+  <button class="tab" onclick="showSection('databases')">Databases</button>
+  <button class="tab" onclick="showSection('velocity')">Filing Velocity</button>
+  <button class="tab" onclick="showSection('countries')">By Country</button>
+  <button class="tab" onclick="showSection('trends')">2025–26 Trends</button>
+</div>
+
+<!-- VALUE CHAIN -->
+<div class="section active" id="chain">
+  <div class="section-title">The IP Value Chain</div>
+  <div class="section-subtitle">Eight stages from invention to monetisation</div>
+
+  <div class="chain">
+    <div class="chain-stage">
+      <div class="stage-num">1</div>
+      <div class="stage-body">
+        <div class="stage-name">Invention & Ideation</div>
+        <div class="stage-desc">The origin of IP. R&D activity generates novel ideas, processes, or technical solutions. Lab notebooks, invention disclosure forms (IDFs), and trade secret documentation begin here. Discovery must be recorded to establish priority dates.</div>
+      </div>
+      <div class="stage-value">
+        <div class="value-label">Key actors</div>
+        <div class="value-text">R&D teams, university labs, individual inventors</div>
+      </div>
+    </div>
+
+    <div class="chain-stage">
+      <div class="stage-num">2</div>
+      <div class="stage-body">
+        <div class="stage-name">IP Identification & Capture</div>
+        <div class="stage-desc">Screening inventions for patent eligibility — novelty, non-obviousness, industrial applicability. Deciding what to protect (patent, trade secret, copyright, design) and what to publish as defensive prior art to block competitors.</div>
+      </div>
+      <div class="stage-value">
+        <div class="value-label">Key actors</div>
+        <div class="value-text">IP counsel, CTOs, patent committees</div>
+      </div>
+    </div>
+
+    <div class="chain-stage">
+      <div class="stage-num">3</div>
+      <div class="stage-body">
+        <div class="stage-name">Prior Art Search & Landscaping</div>
+        <div class="stage-desc">Searching patent databases (USPTO, WIPO, EPO, CNIPA) to assess novelty, freedom-to-operate (FTO), and competitive landscape. Patent landscaping maps the existing IP terrain before investment in filing. AI tools are compressing this from weeks to hours.</div>
+      </div>
+      <div class="stage-value">
+        <div class="value-label">Tools</div>
+        <div class="value-text">PatSnap, Derwent, Google Patents, Questel</div>
+      </div>
+    </div>
+
+    <div class="chain-stage">
+      <div class="stage-num">4</div>
+      <div class="stage-body">
+        <div class="stage-name">Patent Drafting & Filing</div>
+        <div class="stage-desc">Attorneys draft claims — the legal core of the patent. Filing at a national office (USPTO, EPO, JPO, etc.) or via PCT (Patent Cooperation Treaty) for international protection across 150+ countries. Provisional applications allow priority date establishment with 12-month grace period.</div>
+      </div>
+      <div class="stage-value">
+        <div class="value-label">Cost range</div>
+        <div class="value-text">$5K–$25K per filing; $100K+ for global families</div>
+      </div>
+    </div>
+
+    <div class="chain-stage">
+      <div class="stage-num">5</div>
+      <div class="stage-body">
+        <div class="stage-name">Prosecution & Grant</div>
+        <div class="stage-desc">The back-and-forth between applicant and patent examiner — office actions, amendments, appeals. A patent is granted when the examiner accepts claims as valid. Duration: 2–4 years typical. Patents last 20 years from filing date, subject to maintenance fees.</div>
+      </div>
+      <div class="stage-value">
+        <div class="value-label">Duration</div>
+        <div class="value-text">2–4 years to grant; 20-year protection</div>
+      </div>
+    </div>
+
+    <div class="chain-stage">
+      <div class="stage-num">6</div>
+      <div class="stage-body">
+        <div class="stage-name">Portfolio Management & Valuation</div>
+        <div class="stage-desc">Active management of patent families — maintenance fee decisions, continuation filings, portfolio pruning. Valuation for M&A, licensing deals, balance sheet reporting, or securitisation. IP-backed lending and fractional IP finance are emerging asset classes.</div>
+      </div>
+      <div class="stage-value">
+        <div class="value-label">Methods</div>
+        <div class="value-text">Cost, market, income, and option-based approaches</div>
+      </div>
+    </div>
+
+    <div class="chain-stage">
+      <div class="stage-num">7</div>
+      <div class="stage-body">
+        <div class="stage-name">Commercialisation & Licensing</div>
+        <div class="stage-desc">Translating patent rights into revenue. Licensing (exclusive, non-exclusive, cross-licensing), joint ventures, technology transfer, and standard-essential patent (SEP) royalties. FRAND (Fair, Reasonable, Non-Discriminatory) licensing governs SEPs in telecoms, 5G, and Wi-Fi.</div>
+      </div>
+      <div class="stage-value">
+        <div class="value-label">Revenue models</div>
+        <div class="value-text">Royalties, lump-sum, cross-licence, spin-out</div>
+      </div>
+    </div>
+
+    <div class="chain-stage">
+      <div class="stage-num">8</div>
+      <div class="stage-body">
+        <div class="stage-name">Enforcement & Litigation</div>
+        <div class="stage-desc">Defending rights against infringement via cease-and-desist, injunctions, and litigation. Offensive assertion by Patent Assertion Entities (PAEs / patent trolls). Key venues: US ITC, USDC, EPO Opposition Division, and since 2023, the EU's Unified Patent Court (UPC). Inter Partes Review (IPR) is the fast-track patent challenge mechanism at the USPTO.</div>
+      </div>
+      <div class="stage-value">
+        <div class="value-label">Typical cost</div>
+        <div class="value-text">$2M–$10M+ per US district court litigation</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <p><strong>Strategic insight:</strong> The value chain is not linear — companies loop back constantly. A new patent grant triggers fresh FTO searches; a litigation outcome reshapes filing strategy; licensing revenue funds the next R&D cycle. The most sophisticated patent programmes treat IP as a flywheel, not a filing checklist.</p>
+  </div>
+</div>
+
+<!-- DATABASES -->
+<div class="section" id="databases">
+  <div class="section-title">Patent Databases</div>
+  <div class="section-subtitle">Free, paid, and government — the global search infrastructure</div>
+
+  <div class="db-grid">
+    <!-- Free -->
+    <div class="db-card">
+      <span class="db-tag tag-free">Free</span>
+      <div class="db-name">USPTO Patent Full-Text (PatFT/AppFT)</div>
+      <div class="db-owner">US Patent & Trademark Office</div>
+      <div class="db-desc">Full-text access to all granted US patents from 1976. Applications (AppFT) from 2001. Authoritative for US legal status and claim text.</div>
+    </div>
+
+    <div class="db-card">
+      <span class="db-tag tag-free">Free</span>
+      <div class="db-name">PATENTSCOPE</div>
+      <div class="db-owner">WIPO</div>
+      <div class="db-desc">Over 117 million patent documents including 4.9M PCT international applications. Covers 50+ national offices. Machine translation available for 10 languages.</div>
+    </div>
+
+    <div class="db-card">
+      <span class="db-tag tag-free">Free</span>
+      <div class="db-name">Espacenet</div>
+      <div class="db-owner">European Patent Office (EPO)</div>
+      <div class="db-desc">130M+ patent documents from 100+ countries. Strong on CPC classification search and INPADOC patent family data. Go-to for European coverage.</div>
+    </div>
+
+    <div class="db-card">
+      <span class="db-tag tag-free">Free</span>
+      <div class="db-name">Google Patents</div>
+      <div class="db-owner">Google / Alphabet</div>
+      <div class="db-desc">User-friendly interface over USPTO, EPO, CNIPA, JPO, and WIPO data. Best free tool for semantic/keyword search and quick landscape overview. Prior art search built-in.</div>
+    </div>
+
+    <div class="db-card">
+      <span class="db-tag tag-free">Free</span>
+      <div class="db-name">J-PlatPat</div>
+      <div class="db-owner">Japan Patent Office (JPO)</div>
+      <div class="db-desc">Comprehensive Japanese patent database. Essential for technology originating in Japan's automotive, electronics, and robotics sectors.</div>
+    </div>
+
+    <div class="db-card">
+      <span class="db-tag tag-free">Free</span>
+      <div class="db-name">CNIPA Patent Search</div>
+      <div class="db-owner">China National IP Administration</div>
+      <div class="db-desc">Access to the world's largest patent filing corpus — 1.8M applications annually. Critical for any technology landscape given China's 49% share of global filings.</div>
+    </div>
+
+    <div class="db-card">
+      <span class="db-tag tag-free">Free</span>
+      <div class="db-name">KIPRIS</div>
+      <div class="db-owner">Korean IP Office (KIPO)</div>
+      <div class="db-desc">Korean patent, utility model, trademark, and design database. Essential for semiconductor, display, battery, and K-tech monitoring.</div>
+    </div>
+
+    <div class="db-card">
+      <span class="db-tag tag-free">Free</span>
+      <div class="db-name">IP India Patent Search</div>
+      <div class="db-owner">Indian Patent Office</div>
+      <div class="db-desc">Indian patent database — filings growing at 19% p.a. (6th consecutive year of double-digit growth). Key for pharma generics, software, and emerging tech.</div>
+    </div>
+
+    <!-- Paid -->
+    <div class="db-card">
+      <span class="db-tag tag-paid">Paid</span>
+      <div class="db-name">Derwent World Patents Index (DWPI)</div>
+      <div class="db-owner">Clarivate Analytics</div>
+      <div class="db-desc">The gold standard for professional patent research. Enhanced abstracts, deep indexing, comprehensive prior art search. Covers 50+ patent offices. Widely used in litigation and M&A due diligence.</div>
+    </div>
+
+    <div class="db-card">
+      <span class="db-tag tag-paid">Paid</span>
+      <div class="db-name">PatSnap / Eureka</div>
+      <div class="db-owner">PatSnap (Singapore)</div>
+      <div class="db-desc">2B+ structured data points. AI-powered semantic search, competitive intelligence, portfolio analytics, and R&D insights. Strong for corporate strategy teams. PatSnap Eureka adds LLM-based research workflows.</div>
+    </div>
+
+    <div class="db-card">
+      <span class="db-tag tag-paid">Paid</span>
+      <div class="db-name">Questel Orbit</div>
+      <div class="db-owner">Questel (France)</div>
+      <div class="db-desc">100M+ patent documents. Powerful patent family analytics, legal status tracking, and IP portfolio management tools. Popular with European IP law firms.</div>
+    </div>
+
+    <div class="db-card">
+      <span class="db-tag tag-paid">Paid</span>
+      <div class="db-name">IFI CLAIMS</div>
+      <div class="db-owner">Digital Science (US)</div>
+      <div class="db-desc">Preferred database for annual patent ranking studies. Real-time USPTO data, high data quality, used by 1790 Analytics and Anaqua for patent power scoring.</div>
+    </div>
+
+    <div class="db-card">
+      <span class="db-tag tag-paid">Paid</span>
+      <div class="db-name">Lexis+ IP / TotalPatent One</div>
+      <div class="db-owner">LexisNexis / RELX Group</div>
+      <div class="db-desc">Integrated legal and patent research. Combines patent data with litigation records, case law, and news — valuable for enforcement strategy and freedom-to-operate opinions.</div>
+    </div>
+
+    <div class="db-card">
+      <span class="db-tag tag-paid">Paid</span>
+      <div class="db-name">AcclaimIP</div>
+      <div class="db-owner">Anaqua</div>
+      <div class="db-desc">USPTO-focused analytics with deep classification search. Used for annual US patent analysis reports. Combines applications and grants for comprehensive innovation tracking.</div>
+    </div>
+
+    <div class="db-card">
+      <span class="db-tag tag-paid">Paid</span>
+      <div class="db-name">PatSeer</div>
+      <div class="db-owner">Gridlogics (India)</div>
+      <div class="db-desc">AI-based global patent research with LLM-trained semantic search. Strong in reducing data extraction time for R&D teams. Growing presence in Asia-Pacific IP markets.</div>
+    </div>
+
+    <div class="db-card">
+      <span class="db-tag tag-both">Free + Paid</span>
+      <div class="db-name">PATSTAT</div>
+      <div class="db-owner">European Patent Office</div>
+      <div class="db-desc">The researcher's database — structured patent statistics used by WIPO, universities, and policy bodies. Full citation and family data. Available in online (free, limited) and full database (paid) forms.</div>
+    </div>
+
+    <div class="db-card">
+      <span class="db-tag tag-both">Free + Paid</span>
+      <div class="db-name">InnovationQ+ (IP.com)</div>
+      <div class="db-owner">IP.com</div>
+      <div class="db-desc">Combines Boolean and natural language search with AI semantic tools. Built for identifying Standard-Essential Patents (SEPs) and FTO analysis. Covers the entire IP lifecycle from ideation to monetisation.</div>
+    </div>
+  </div>
+</div>
+
+<!-- VELOCITY -->
+<div class="section" id="velocity">
+  <div class="section-title">Patent Velocity</div>
+  <div class="section-subtitle">Organisations filing the most patents globally — 2024 data</div>
+
+  <div class="callout">
+    <p><strong>Methodology note:</strong> PCT filings (WIPO) represent international applications. US grants (IFI CLAIMS / USPTO) measure patents issued in America. Both are imperfect proxies for total portfolio size — Samsung's 80,000+ active global patents span hundreds of subsidiary filings. Rankings shift depending on whether you count grants, applications, families, or active patents in force.</p>
+  </div>
+
+  <table class="velocity-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Organisation</th>
+        <th>Country</th>
+        <th>PCT Applications 2024</th>
+        <th>Industry / Domain</th>
+        <th>Velocity signal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="rank-num">1</span></td>
+        <td><span class="org-name">Huawei Technologies</span><span class="org-country">Consistently #1 global PCT filer since 2019</span></td>
+        <td><span class="country-badge badge-cn">China</span></td>
+        <td>6,600 PCT apps</td>
+        <td>Telecom · 5G · AI · Semiconductors</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:100%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">2</span></td>
+        <td><span class="org-name">Samsung Electronics</span><span class="org-country">+3% US grants YoY; 80,000+ active global patents</span></td>
+        <td><span class="country-badge badge-kr">South Korea</span></td>
+        <td>4,640 PCT apps</td>
+        <td>Semiconductors · Displays · Consumer Electronics · AI</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:88%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">3</span></td>
+        <td><span class="org-name">Qualcomm</span><span class="org-country">SEP leader in 5G / Wi-Fi; shifted to licensing model</span></td>
+        <td><span class="country-badge badge-us">USA</span></td>
+        <td>3,848 PCT apps</td>
+        <td>Wireless · Chipsets · Automotive · IoT</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:72%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">4</span></td>
+        <td><span class="org-name">LG Electronics</span><span class="org-country">Strong in EV battery IP via LG Energy Solution</span></td>
+        <td><span class="country-badge badge-kr">South Korea</span></td>
+        <td>2,083 PCT apps</td>
+        <td>Home Appliances · EV Battery · OLED · AI</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:60%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">5</span></td>
+        <td><span class="org-name">CATL (Contemporary Amperex)</span><span class="org-country">World's largest EV battery maker; IP as moat</span></td>
+        <td><span class="country-badge badge-cn">China</span></td>
+        <td>1,993 PCT apps</td>
+        <td>EV Batteries · Energy Storage · Clean Tech</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:55%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">6</span></td>
+        <td><span class="org-name">BOE Technology Group</span><span class="org-country">China's display champion; top 10 PCT filer</span></td>
+        <td><span class="country-badge badge-cn">China</span></td>
+        <td>1,959 PCT apps</td>
+        <td>Display Technology · Flex OLED · IoT</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:52%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">7</span></td>
+        <td><span class="org-name">TSMC</span><span class="org-country">Fastest rising in US rankings — +19.9% grants in 2024</span></td>
+        <td><span class="country-badge badge-cn">Taiwan</span></td>
+        <td>Est. 1,800+ PCT</td>
+        <td>Semiconductor Fabrication · EUV · Advanced Nodes</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:50%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">8</span></td>
+        <td><span class="org-name">Xiaomi (Beijing Mobile Software)</span><span class="org-country">Rapidly scaling international patent posture</span></td>
+        <td><span class="country-badge badge-cn">China</span></td>
+        <td>1,889 PCT apps</td>
+        <td>Smartphones · IoT · Smart Home · AI</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:48%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">9</span></td>
+        <td><span class="org-name">IBM</span><span class="org-country">29-yr US leader; now selective — slipped to 8th in US</span></td>
+        <td><span class="country-badge badge-us">USA</span></td>
+        <td>Est. 1,700+ PCT</td>
+        <td>AI / ML · Quantum · Hybrid Cloud · Cybersecurity</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:45%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">10</span></td>
+        <td><span class="org-name">Apple</span><span class="org-country">4th in US grants 2024; high-influence, selective filing</span></td>
+        <td><span class="country-badge badge-us">USA</span></td>
+        <td>Est. 1,500+ PCT</td>
+        <td>Consumer Electronics · Chips · UX · Vision · Health</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:42%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">—</span></td>
+        <td><span class="org-name">Alphabet (Google)</span><span class="org-country">#1 global AI patent applicant 2024 (1,121 AI apps)</span></td>
+        <td><span class="country-badge badge-us">USA</span></td>
+        <td>Est. 1,400+ PCT</td>
+        <td>AI/ML · Search · Cloud · Quantum · Life Sciences</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:40%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">—</span></td>
+        <td><span class="org-name">Microsoft</span><span class="org-country">Top 5 AI patent filer; Azure + OpenAI ecosystem IP</span></td>
+        <td><span class="country-badge badge-us">USA</span></td>
+        <td>Est. 1,300+ PCT</td>
+        <td>Cloud · AI · Enterprise Software · Mixed Reality</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:38%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">—</span></td>
+        <td><span class="org-name">Ericsson</span><span class="org-country">SEP royalty engine; 5G standard-essential patents</span></td>
+        <td><span class="country-badge badge-de">Sweden</span></td>
+        <td>Est. 1,100+ PCT</td>
+        <td>5G · Telecom Infrastructure · Network Software</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:35%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">—</span></td>
+        <td><span class="org-name">Toyota Motor</span><span class="org-country">Hydrogen + hybrid IP leader; EV transition shaping filing</span></td>
+        <td><span class="country-badge badge-jp">Japan</span></td>
+        <td>Est. 1,000+ PCT</td>
+        <td>Automotive · Fuel Cell · ADAS · Manufacturing</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:33%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">—</span></td>
+        <td><span class="org-name">Robert Bosch</span><span class="org-country">Europe's top industrial filer; IoT + auto + clean tech</span></td>
+        <td><span class="country-badge badge-de">Germany</span></td>
+        <td>Est. 950+ PCT</td>
+        <td>Industrial IoT · Automotive · Smart Home · Sensors</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:30%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">—</span></td>
+        <td><span class="org-name">Tencent</span><span class="org-country">+54 places in US 2024 rankings; AI surge accelerating</span></td>
+        <td><span class="country-badge badge-cn">China</span></td>
+        <td>Est. 900+ PCT</td>
+        <td>AI · Gaming · Social · Fintech · Cloud</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:28%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">—</span></td>
+        <td><span class="org-name">Ping An Insurance</span><span class="org-country">Largest non-tech AI patent holder; FinInsurTech IP moat</span></td>
+        <td><span class="country-badge badge-cn">China</span></td>
+        <td>Est. 800+ PCT</td>
+        <td>InsurTech · AI · Fintech · Health AI</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:25%"></div></div></td>
+      </tr>
+      <tr>
+        <td><span class="rank-num">—</span></td>
+        <td><span class="org-name">State Grid Corporation</span><span class="org-country">World's largest utility; AI applied to grid infrastructure</span></td>
+        <td><span class="country-badge badge-cn">China</span></td>
+        <td>Est. 750+ PCT</td>
+        <td>Smart Grid · Energy AI · Power Systems</td>
+        <td><div class="bar-wrap"><div class="bar-fill" style="width:22%"></div></div></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <p><strong>On patent "power" vs. volume:</strong> Amazon ranked 20th by raw US patent count in 2024, yet tops the 1790 Analytics patent power ranking because its patents are cited more frequently and across more categories. Snap, with just 770 patents, ranks above Qualcomm on the same influence metric. Volume is a proxy for R&D activity; influence is closer to competitive moat.</p>
+  </div>
+</div>
+
+<!-- COUNTRIES -->
+<div class="section" id="countries">
+  <div class="section-title">Patent Velocity by Country</div>
+  <div class="section-subtitle">Global filing rankings — 2024 data (WIPO)</div>
+
+  <div class="country-grid">
+    <div class="country-card">
+      <div class="country-rank">1</div>
+      <div class="country-name">China</div>
+      <div class="country-apps">1.8 million applications · 49.1% global share</div>
+      <div class="country-note">5th consecutive year of growth. CNIPA approaching the 2M annual mark. Domestic-focused — only 6.9% filed abroad. Leads in computer tech, display, EV batteries, 5G. 70,160 PCT international applications.</div>
+    </div>
+    <div class="country-card">
+      <div class="country-rank">2</div>
+      <div class="country-name">USA</div>
+      <div class="country-apps">603,194 applications at USPTO · 16.2% global share</div>
+      <div class="country-note">3rd consecutive year of modest growth (+0.8%). US-based applicants filed 501,831 worldwide. Leads in cloud, AI influence, biotech, and semiconductor design. 54,087 PCT applications — 2nd globally.</div>
+    </div>
+    <div class="country-card">
+      <div class="country-rank">3</div>
+      <div class="country-name">Japan</div>
+      <div class="country-apps">306,855 applications at JPO</div>
+      <div class="country-note">4th straight year of growth (+2.2%). 419,132 applications worldwide. Strongest in electrical machinery, automotive, robotics. 48,397 PCT applications. High filing intensity relative to GDP (4,150 per $100B).</div>
+    </div>
+    <div class="country-card">
+      <div class="country-rank">4</div>
+      <div class="country-name">South Korea</div>
+      <div class="country-apps">246,245 applications at KIPO</div>
+      <div class="country-note">Growth of +1.2% in 2024. Dominant in semiconductors (Samsung, SK Hynix), displays (LG), and batteries. 23,851 PCT applications. Korea leads global index in patent filing intensity per GDP (Republic of Korea highest at 7,309 per $100B).</div>
+    </div>
+    <div class="country-card">
+      <div class="country-rank">5</div>
+      <div class="country-name">Europe (EPO)</div>
+      <div class="country-apps">199,402 applications at EPO</div>
+      <div class="country-note">Slight decline in 2024 after 3 years of strong growth. Germany leads in transport patents, Netherlands in medical tech, Switzerland in pharma. Germany filed 16,721 PCT applications — 5th globally. The new Unified Patent Court (UPC) active since 2023.</div>
+    </div>
+    <div class="country-card">
+      <div class="country-rank">6</div>
+      <div class="country-name">India</div>
+      <div class="country-apps">+19.1% global filings growth in 2024</div>
+      <div class="country-note">6th consecutive year of double-digit growth — fastest rising major economy. Strong in pharma, software, and engineering. Applications surging at Indian Patent Office and abroad. Still small in absolute terms (~100K total) but trajectory is steepest globally.</div>
+    </div>
+    <div class="country-card">
+      <div class="country-rank">7</div>
+      <div class="country-name">Germany</div>
+      <div class="country-apps">~67,000 resident applications</div>
+      <div class="country-note">Europe's industrial patent leader. Strong in transport, automotive (Bosch, BMW, Volkswagen), industrial machinery. Filing intensity dropped out of top 5 (GDP-relative) for first time in 2023. 16,721 PCT applications — largest European PCT filer.</div>
+    </div>
+    <div class="country-card">
+      <div class="country-rank">↑</div>
+      <div class="country-name">Türkiye</div>
+      <div class="country-apps">+18.4% growth — entered global top 20 in 2024</div>
+      <div class="country-note">Fastest growth among top 20 countries. Rose from 23rd to 18th position globally. Driven by a surge in resident filings. Emerging industrial and tech manufacturing base.</div>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top: 2rem;">
+    <p><strong>The intensity metric:</strong> Filing volume favours large economies. A better proxy for innovation density is patent applications per $100B GDP. By that measure, South Korea leads at 7,309, followed by China (4,977), Japan (4,150), Switzerland (1,506), and Finland (1,331). Small Nordic nations consistently punch above their weight in per-capita innovation output.</p>
+  </div>
+</div>
+
+<!-- TRENDS -->
+<div class="section" id="trends">
+  <div class="section-title">2025–26 Trends</div>
+  <div class="section-subtitle">What's moving the patent landscape right now</div>
+
+  <ul class="trend-list">
+    <li class="trend-item">
+      <div class="trend-arrow">↑</div>
+      <div class="trend-body">
+        <strong>AI patents accelerating — up 33% since 2018</strong>
+        <p>AI-related applications appeared in 60% of all technology subclasses by 2023. Alphabet leads global AI patent filings (1,121 apps in 2024). Generative AI specifically is dominated by Alphabet, Zhejiang University, Microsoft, and Baidu. The USPTO now clarifies that only human inventors qualify — AI systems cannot be listed as inventors under Thaler v. Vidal — but humans using AI tools can still file.</p>
+      </div>
+    </li>
+    <li class="trend-item">
+      <div class="trend-arrow">↑</div>
+      <div class="trend-body">
+        <strong>Clean tech and sustainability patents surging</strong>
+        <p>Green patent applications projected to spike 60% by 2025. Three of IFI's Top 10 fastest-growing technology categories in 2024 involve waste reduction — reclaiming non-ferrous metals (CAGR 26.2%), recovery of waste materials (26.1%), and destroying solid waste (17.7%). EV battery patents (CATL, LG Energy, Changxin Memory) growing fast.</p>
+      </div>
+    </li>
+    <li class="trend-item">
+      <div class="trend-arrow">↑</div>
+      <div class="trend-body">
+        <strong>Medical and biotech patents surging post-COVID</strong>
+        <p>Medical-related patents saw a 76.3% increase in US grants in 2024 (30,429 to 53,648). Leading filers include Medtronic, Johnson & Johnson, Becton Dickinson, and Boston Scientific. CRISPR-Cas9 patent ownership (UC vs Broad Institute) remains one of the most consequential ongoing IP disputes in biotech.</p>
+      </div>
+    </li>
+    <li class="trend-item">
+      <div class="trend-arrow">→</div>
+      <div class="trend-body">
+        <strong>SEP / FRAND disputes intensifying in 5G era</strong>
+        <p>Standard-essential patents in 5G, Wi-Fi 6, and USB-C are generating significant licensing disputes. Qualcomm, Ericsson, Nokia, and Huawei hold major SEP portfolios. FRAND licensing terms are contested — who pays, how much, and under what terms remains litigated globally, including at the new EU Unified Patent Court.</p>
+      </div>
+    </li>
+    <li class="trend-item">
+      <div class="trend-arrow">↑</div>
+      <div class="trend-body">
+        <strong>China's global share keeps rising — now 49% of all filings</strong>
+        <p>China went from 34.6% of global filings (2014) to 49.1% (2024). CNIPA nearly approached the 2-million-application mark. However, only 6.9% of Chinese filings are international — suggesting a primarily domestic defensive posture rather than a globalised portfolio. Huawei is the main exception, leading PCT filings globally for years.</p>
+      </div>
+    </li>
+    <li class="trend-item">
+      <div class="trend-arrow">↑</div>
+      <div class="trend-body">
+        <strong>AI tools compressing the IP cycle dramatically</strong>
+        <p>AI is cutting patent valuation time by up to 60%. Semantic patent search (PatSeer, PatSnap Eureka, InnovationQ+) is replacing Boolean-only methods. AI-generated prior art disclosures are being used offensively to block future patentability — a novel tactic in IP strategy. Smart contracts are automating licensing terms on-chain.</p>
+      </div>
+    </li>
+    <li class="trend-item">
+      <div class="trend-arrow">→</div>
+      <div class="trend-body">
+        <strong>EU Unified Patent Court changes European enforcement</strong>
+        <p>The UPC, active since June 2023, creates a single patent litigation venue for participating EU member states. A single UPC judgment can revoke a patent across all participating states — dramatically raising the stakes for both patent holders and challengers. Early case volume suggests rapid adoption by pharma and tech companies.</p>
+      </div>
+    </li>
+    <li class="trend-item">
+      <div class="trend-arrow">↑</div>
+      <div class="trend-body">
+        <strong>IP-backed finance and fractional IP emerging as asset class</strong>
+        <p>Patent portfolios are increasingly being used as collateral for secured lending. Fractional IP platforms and art-finance-style instruments are being explored for high-value patent families. This mirrors broader trends in alternative asset finance — treating IP as a balance sheet asset that generates both royalty income and debt-financing capacity.</p>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<script>
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>
